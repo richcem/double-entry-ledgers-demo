@@ -6,29 +6,52 @@ import (
 	"github.com/richcem/double-entry-ledgers-demo/middleware"
 )
 
-// InitRoutes initializes all application routes
+// InitRoutes 初始化路由
 func InitRoutes(e *echo.Echo) {
-	// API group
+	// 公开路由
+	public := e.Group("/api")
+	{
+		// 认证路由
+		auth := public.Group("/auth")
+		{
+			auth.POST("/login", controllers.Login)
+		}
+
+		// 健康检查
+		public.GET("/health", func(c echo.Context) error {
+			return c.JSON(200, map[string]string{"status": "ok"})
+		})
+	}
+
+	// 需要认证的路由
 	api := e.Group("/api")
+	api.Use(middleware.AuthMiddleware)
+	{
+		// 用户信息
+		auth := api.Group("/auth")
+		{
+			auth.GET("/me", controllers.GetCurrentUser)
+		}
 
-	// Account routes with auth middleware
-	account := api.Group("/accounts")
-	account.Use(middleware.AuthMiddleware)
-	account.POST("/", controllers.CreateAccount)
-	account.GET("/", controllers.GetAllAccounts)
-	account.GET("/:id", controllers.GetAccountByID)
-	account.PUT("/:id", controllers.UpdateAccount)
-	account.DELETE("/:id", controllers.DeleteAccount)
+		// 账户路由
+		accounts := api.Group("/accounts")
+		{
+			accounts.GET("", controllers.GetAllAccounts)
+			accounts.GET("/:id", controllers.GetAccountByID)
+			accounts.POST("", controllers.CreateAccount)
+			accounts.PUT("/:id", controllers.UpdateAccount)
+			accounts.DELETE("/:id", controllers.DeleteAccount)
+		}
 
-	// Transaction routes
-	transaction := api.Group("/transactions")
-	transaction.POST("/", controllers.CreateTransaction)
-	transaction.GET("/", controllers.GetAllTransactions)
-	transaction.GET("/:id", controllers.GetTransactionByID)
+		// 交易路由
+		transactions := api.Group("/transactions")
+		{
+			transactions.GET("", controllers.GetAllTransactions)
+			transactions.GET("/:id", controllers.GetTransactionByID)
+			transactions.POST("", controllers.CreateTransaction)
+			// transactions.PUT("/:id", controllers.UpdateTransaction) // TODO: 实现controllers.UpdateTransaction函数以解决未定义错误
 
-	// Transfer route
-	api.POST("/transfers", controllers.CreateTransfer)
-
-	// Balance routes
-	api.GET("/accounts/:id/balance", controllers.GetAccountBalance)
+			// transactions.DELETE("/:id", controllers.DeleteTransaction) // TODO: 实现controllers.DeleteTransaction函数以解决未定义错误
+		}
+	}
 }

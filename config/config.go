@@ -2,55 +2,33 @@ package config
 
 import (
 	"os"
-	"strconv"
 
-	"github.com/joho/godotenv"
+	"gopkg.in/yaml.v3"
 )
 
-// Config holds application configuration
+// Config 应用配置
 type Config struct {
-	JWTSecret  string
-	ServerPort int
-	DBHost     string
-	DBPort     int
-	DBUser     string
-	DBPassword string
-	DBName     string
+	JWTSecret string `yaml:"jwt_secret"`
 }
 
-// Load loads configuration from environment variables and .env file
+// Load 加载配置文件
 func Load() (*Config, error) {
-	// Load .env file if exists
-	_ = godotenv.Load()
-
-	// Parse server port
-	port, err := strconv.Atoi(getEnv("SERVER_PORT", "8080"))
-	if err != nil {
-		port = 8080
+	// 默认配置
+	config := &Config{
+		JWTSecret: "your-secret-key-here", // 实际生产环境中应使用更安全的密钥
 	}
 
-	// Parse database port
-	dbPort, err := strconv.Atoi(getEnv("DB_PORT", "5432"))
-	if err != nil {
-		dbPort = 5432
+	// 如果配置文件存在，则加载配置文件
+	if _, err := os.Stat("config.yaml"); err == nil {
+		data, err := os.ReadFile("config.yaml")
+		if err != nil {
+			return nil, err
+		}
+
+		if err := yaml.Unmarshal(data, config); err != nil {
+			return nil, err
+		}
 	}
 
-	return &Config{
-		JWTSecret:  getEnv("JWT_SECRET", "your-secure-jwt-secret-key"),
-		ServerPort: port,
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     dbPort,
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "postgres"),
-		DBName:     getEnv("DB_NAME", "ledgers"),
-	}, nil
-}
-
-// getEnv returns environment variable value or default if not set
-func getEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
+	return config, nil
 }

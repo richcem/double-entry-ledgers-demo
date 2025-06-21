@@ -1,5 +1,24 @@
 basePath: /api
 definitions:
+  controllers.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  controllers.LoginResponse:
+    properties:
+      expires_at:
+        type: integer
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
   models.Account:
     properties:
       balance:
@@ -59,12 +78,26 @@ definitions:
       updated_at:
         type: string
     type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      role:
+        description: admin/user
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
     email: support@example.com
     name: API Support
-  description: 复式记账系统API文档
+  description: 双记账系统API文档
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -126,6 +159,61 @@ paths:
             type: object
       tags:
       - accounts
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录并获取JWT令牌
+      parameters:
+      - description: 登录信息
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - auth
+  /api/auth/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      tags:
+      - auth
   /api/transactions:
     post:
       consumes:
