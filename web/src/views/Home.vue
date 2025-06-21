@@ -2,7 +2,7 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- 欢迎信息 -->
     <div class="md:col-span-3 card">
-      <h2 class="text-2xl font-bold mb-4">欢迎使用双-entry记账系统</h2>
+      <h2 class="text-2xl font-bold mb-4">欢迎使用复式记账系统</h2>
       <p class="text-gray-600 mb-6">
         这是一个基于复式记账法的财务管理系统，帮助您记录和管理账户交易。
         通过本系统，您可以查询账户余额、进行账户间转账以及查看交易历史记录。
