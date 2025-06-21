@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/richcem/double-entry-ledgers-demo/controllers"
+	"github.com/richcem/double-entry-ledgers-demo/middleware"
 )
 
 // InitRoutes initializes all application routes
@@ -10,8 +11,9 @@ func InitRoutes(e *echo.Echo) {
 	// API group
 	api := e.Group("/api")
 
-	// Account routes
+	// Account routes with auth middleware
 	account := api.Group("/accounts")
+	account.Use(middleware.AuthMiddleware)
 	account.POST("/", controllers.CreateAccount)
 	account.GET("/", controllers.GetAllAccounts)
 	account.GET("/:id", controllers.GetAccountByID)

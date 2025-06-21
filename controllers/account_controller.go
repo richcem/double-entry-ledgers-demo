@@ -15,6 +15,18 @@ func CreateAccount(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	// Validate account data
+	if account.Name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "账户名称不能为空"})
+	}
+	if account.Type == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "账户类型不能为空"})
+	}
+	validTypes := map[string]bool{"asset": true, "liability": true, "equity": true, "income": true, "expense": true}
+	if !validTypes[account.Type] {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效的账户类型，必须是asset、liability、equity、income或expense"})
+	}
+
 	if err := database.DB.Create(account).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create account"})
 	}
@@ -58,8 +70,19 @@ func UpdateAccount(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	// Validate account data
+	if updatedAccount.Name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "账户名称不能为空"})
+	}
+	if updatedAccount.Type != "" {
+		validTypes := map[string]bool{"asset": true, "liability": true, "equity": true, "income": true, "expense": true}
+		if !validTypes[updatedAccount.Type] {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效的账户类型，必须是asset、liability、equity、income或expense"})
+		}
+		account.Type = updatedAccount.Type
+	}
+
 	account.Name = updatedAccount.Name
-	account.Type = updatedAccount.Type
 
 	if err := database.DB.Save(&account).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update account"})

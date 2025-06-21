@@ -4,8 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/richcem/double-entry-ledgers-demo/models"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
+	"github.com/richcem/double-entry-ledgers-demo/config"
+	"github.com/richcem/double-entry-ledgers-demo/migrations"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -16,8 +17,16 @@ var DB *gorm.DB
 func InitDB() {
 	var err error
 
-	// For development, we'll use SQLite
-	DB, err = gorm.Open(sqlite.Open("ledger.db"), &gorm.Config{
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+		os.Exit(1)
+	}
+
+	// For development, we'll use SQLite with pure Go driver
+	// Using glebarez/sqlite which is a pure Go driver
+	DB, err = gorm.Open(sqlite.Open(cfg.DBName+"?cache=shared&_fk=1"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
@@ -25,14 +34,9 @@ func InitDB() {
 		os.Exit(1)
 	}
 
-	// Auto-migrate models
-	err = DB.AutoMigrate(
-		&models.Account{},
-		&models.Transaction{},
-		&models.Entry{},
-	)
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
+	// Run migrations using gormigrate
+	if err := migrations.Migrate(DB); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
 		os.Exit(1)
 	}
 
