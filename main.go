@@ -1,3 +1,16 @@
+// @title Double-Entry Ledgers API
+// @version 1.0
+// @description 双记账系统API文档
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@example.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api
 package main
 
 import (
@@ -7,6 +20,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/richcem/double-entry-ledgers-demo/database"
 	"github.com/richcem/double-entry-ledgers-demo/routes"
+    _ "github.com/richcem/double-entry-ledgers-demo/docs" // 导入生成的docs包
+    "github.com/swaggo/echo-swagger"
 )
 
 func main() {
@@ -23,6 +38,9 @@ func main() {
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
+
+	// 添加Swagger UI路由
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Start server
 	log.Println("Starting server on :8080")

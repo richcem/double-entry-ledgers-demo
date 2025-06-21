@@ -10,59 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// CreateTransaction creates a new transaction with entries
-func CreateTransaction(c echo.Context) error {
-	transaction := new(models.Transaction)
-	if err := c.Bind(transaction); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
-
-	// Set default values
-	transaction.Date = time.Now()
-	transaction.Status = "completed"
-
-	// Use transaction to ensure data consistency
-	if err := database.DB.Transaction(func(tx *gorm.DB) error {
-		// Create transaction
-		if err := tx.Create(transaction).Error; err != nil {
-			return err
-		}
-
-		// Create entries and update account balances
-		for i := range transaction.Entries {
-			entry := &transaction.Entries[i]
-			entry.TransactionID = transaction.ID
-
-			// Create entry
-			if err := tx.Create(entry).Error; err != nil {
-				return err
-			}
-
-			// Update account balance
-			var account models.Account
-			if err := tx.First(&account, entry.AccountID).Error; err != nil {
-				return err
-			}
-
-			if entry.Type == "debit" {
-				account.Balance += entry.Amount
-			} else if entry.Type == "credit" {
-				account.Balance -= entry.Amount
-			}
-
-			if err := tx.Save(&account).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create transaction: " + err.Error()})
-	}
-
-	return c.JSON(http.StatusCreated, transaction)
-}
-
 // GetAllTransactions returns all transactions
 func GetAllTransactions(c echo.Context) error {
 	var transactions []models.Transaction
@@ -171,6 +118,68 @@ func CreateTransfer(c echo.Context) error {
 		return nil
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Transfer failed: " + err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, transaction)
+}
+
+// @Title CreateTransaction
+// @Description 创建新交易
+// @Tags transactions
+// @Accept  json
+// @Produce  json
+// @Param   transaction body models.Transaction true "交易信息"
+// @Success 201 {object} models.Transaction
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/transactions [post]
+func CreateTransaction(c echo.Context) error {
+	transaction := new(models.Transaction)
+	if err := c.Bind(transaction); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Set default values
+	transaction.Date = time.Now()
+	transaction.Status = "completed"
+
+	// Use transaction to ensure data consistency
+	if err := database.DB.Transaction(func(tx *gorm.DB) error {
+		// Create transaction
+		if err := tx.Create(transaction).Error; err != nil {
+			return err
+		}
+
+		// Create entries and update account balances
+		for i := range transaction.Entries {
+			entry := &transaction.Entries[i]
+			entry.TransactionID = transaction.ID
+
+			// Create entry
+			if err := tx.Create(entry).Error; err != nil {
+				return err
+			}
+
+			// Update account balance
+			var account models.Account
+			if err := tx.First(&account, entry.AccountID).Error; err != nil {
+				return err
+			}
+
+			if entry.Type == "debit" {
+				account.Balance += entry.Amount
+			} else if entry.Type == "credit" {
+				account.Balance -= entry.Amount
+			}
+
+			if err := tx.Save(&account).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create transaction: " + err.Error()})
 	}
 
 	return c.JSON(http.StatusCreated, transaction)

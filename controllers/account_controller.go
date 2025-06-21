@@ -9,6 +9,16 @@ import (
 )
 
 // CreateAccount creates a new account
+// @Title CreateAccount
+// @Description 创建新账户
+// @Tags accounts
+// @Accept  json
+// @Produce  json
+// @Param   account body models.Account true "账户信息"
+// @Success 201 {object} models.Account
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/accounts [post]
 func CreateAccount(c echo.Context) error {
 	account := new(models.Account)
 	if err := c.Bind(account); err != nil {
@@ -35,6 +45,14 @@ func CreateAccount(c echo.Context) error {
 }
 
 // GetAllAccounts returns all accounts
+// @Title GetAllAccounts
+// @Description 获取所有账户
+// @Tags accounts
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} []models.Account
+// @Failure 500 {object} map[string]string
+// @Router /api/accounts [get]
 func GetAllAccounts(c echo.Context) error {
 	var accounts []models.Account
 	if err := database.DB.Find(&accounts).Error; err != nil {

@@ -1,0 +1,162 @@
+basePath: /api
+definitions:
+  models.Account:
+    properties:
+      balance:
+        type: number
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      type:
+        description: asset, liability, equity, revenue, expense
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Entry:
+    properties:
+      account:
+        $ref: '#/definitions/models.Account'
+      account_id:
+        type: integer
+      amount:
+        description: Positive for debit, negative for credit
+        type: number
+      created_at:
+        type: string
+      id:
+        type: integer
+      transaction_id:
+        type: integer
+      type:
+        description: debit or credit
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Transaction:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      entries:
+        items:
+          $ref: '#/definitions/models.Entry'
+        type: array
+      id:
+        type: integer
+      status:
+        description: pending, completed, failed, reversed
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+  description: 复式记账系统API文档
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Double-Entry Ledgers API
+  version: "1.0"
+paths:
+  /api/accounts:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有账户
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Account'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: 创建新账户
+      parameters:
+      - description: 账户信息
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/models.Account'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Account'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - accounts
+  /api/transactions:
+    post:
+      consumes:
+      - application/json
+      description: 创建新交易
+      parameters:
+      - description: 交易信息
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/models.Transaction'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - transactions
+swagger: "2.0"
