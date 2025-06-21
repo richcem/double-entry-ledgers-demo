@@ -23,6 +23,12 @@ func Migrate(db *gorm.DB) error {
 			Migrate:  CreateEntriesTable,
 			Rollback: DropEntriesTable,
 		},
+		// 添加用户表迁移
+		{
+			ID:       "20231015000003",
+			Migrate:  CreateUsersTable,
+			Rollback: DropUsersTable,
+		},
 	})
 
 	return m.Migrate()

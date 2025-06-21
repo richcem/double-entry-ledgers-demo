@@ -19,9 +19,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/richcem/double-entry-ledgers-demo/database"
+	_ "github.com/richcem/double-entry-ledgers-demo/docs" // 导入生成的docs包
 	"github.com/richcem/double-entry-ledgers-demo/routes"
-    _ "github.com/richcem/double-entry-ledgers-demo/docs" // 导入生成的docs包
-    "github.com/swaggo/echo-swagger"
+	"github.com/richcem/double-entry-ledgers-demo/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func main() {
@@ -30,6 +31,9 @@ func main() {
 
 	// Create Echo instance
 	e := echo.New()
+	
+	// 注册验证器 middleware
+	e.Validator = middleware.NewValidator()
 
 	// Configure routes
 	routes.InitRoutes(e)
