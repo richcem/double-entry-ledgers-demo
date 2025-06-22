@@ -169,25 +169,16 @@ const validateForm = () => {
 // 处理转账提交
 const handleSubmit = async () => {
   if (!validateForm()) return;
-
+  
   try {
     loading.value = true;
-    error.value = '';
-    successMessage.value = '';
-
-    const response = await axios.post('/transactions/transfer', transfer.value);
-    successMessage.value = '转账成功！交易ID: ' + response.data.id;
-
-    // 重置表单
-    resetForm();
-
-    // 2秒后可以选择跳转到交易记录页面
+    const response = await transactionStore.createTransaction(transfer.value);
+    
+    // 在组件中处理路由跳转
+    successMessage.value = '转账成功！交易ID: ' + response.id;
     setTimeout(() => {
-      if (confirm('转账成功，是否前往交易记录页面查看？')) {
-        router.push('/transactions');
-      }
+      router.push('/transactions');
     }, 2000);
-
   } catch (err) {
     error.value = '转账失败: ' + (err.response?.data?.error || err.message);
     console.error('Transfer error:', err);

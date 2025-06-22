@@ -4,26 +4,30 @@
     <header class="bg-blue-600 text-white shadow-md">
       <div class="container mx-auto px-4 py-3">
         <div class="flex justify-between items-center">
-          <h1 class="text-xl font-bold">双-entry记账系统</h1>
-          <nav>
-            <ul class="flex space-x-6 items-center">
-              <li><router-link to="/" class="hover:text-blue-200 transition-colors">首页</router-link></li>
-              <li><router-link to="/accounts" class="hover:text-blue-200 transition-colors">账户查询</router-link></li>
-              <li><router-link to="/transfer" class="hover:text-blue-200 transition-colors">转账</router-link></li>
-              <li><router-link to="/transactions" class="hover:text-blue-200 transition-colors">交易记录</router-link></li>
-              
-              <!-- 用户信息和登出按钮 - 自动靠右 -->
-              <li class="flex items-center space-x-4 ml-8">
-                <span class="whitespace-nowrap">欢迎，{{ username }}</span>
-                <button 
-                  @click="logout" 
-                  class="hover:text-blue-200 transition-colors px-3 py-1 rounded hover:bg-blue-700"
-                >
-                  登出
-                </button>
-              </li>
-            </ul>
-          </nav>
+          <h1 class="text-xl font-bold">复式记账系统</h1>
+          <div class="flex items-center space-x-8">
+            <!-- 功能导航 -->
+            <nav>
+              <ul class="flex space-x-6 items-center">
+                <li><router-link to="/" class="hover:text-blue-200 transition-colors">首页</router-link></li>
+                <li><router-link to="/accounts" class="hover:text-blue-200 transition-colors">账户查询</router-link></li>
+                <li><router-link to="/deposit" class="hover:text-blue-200 transition-colors">账户入账</router-link></li>
+                <li><router-link to="/transfer" class="hover:text-blue-200 transition-colors">转账</router-link></li>
+                <li><router-link to="/transactions" class="hover:text-blue-200 transition-colors">交易记录</router-link></li>
+              </ul>
+            </nav>
+            
+            <!-- 用户信息和登出按钮 -->
+            <div class="flex items-center space-x-4">
+              <span class="whitespace-nowrap">欢迎，{{ username }}</span>
+              <button 
+                @click="logout" 
+                class="hover:text-blue-200 transition-colors px-3 py-1 rounded hover:bg-blue-700"
+              >
+                登出
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </header>

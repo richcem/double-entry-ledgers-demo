@@ -168,7 +168,16 @@ const fetchTransactions = async () => {
   try {
     loading.value = true;
     error.value = '';
-    const response = await axios.get('/transactions');
+    // 将查询参数改为snake_case格式
+    const params = {
+      filter_account_id: filterAccountId.value,
+      date_start: dateRange.start,
+      date_end: dateRange.end,
+      search_query: searchQuery.value,
+      page: currentPage.value,
+      page_size: pageSize.value
+    };
+    const response = await axios.get('/transactions', { params });
     transactions.value = response.data;
     currentPage.value = 1; // 重置到第一页
   } catch (err) {

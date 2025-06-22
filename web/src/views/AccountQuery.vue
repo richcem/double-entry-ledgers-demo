@@ -13,7 +13,8 @@
         />
       </div>
       <div class="flex gap-2">
-        <button @click="fetchAccounts()" class="btn-primary whitespace-nowrap">
+        <button @click="fetchAccounts()" class="btn-primary whitespace-nowrap" :disabled="accountStore.loading">
+          <span v-if="accountStore.loading" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
           刷新账户
         </button>
         <button @click="exportAccounts()" class="btn-secondary whitespace-nowrap">
@@ -25,8 +26,13 @@
       </div>
     </div>
 
+    <!-- 错误提示 -->
+    <div v-if="accountStore.error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+      <p>{{ accountStore.error }}</p>
+    </div>
+
     <!-- 账户列表 -->
-    <div v-if="accounts.length > 0" class="overflow-x-auto">
+    <div v-if="accountStore.accounts.length > 0" class="overflow-x-auto">
       <table class="min-w-full bg-white">
         <thead>
           <tr class="bg-gray-100 text-left">
@@ -148,13 +154,14 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
 
+// 导入Account Store
+import { useAccountStore } from '@/store/account';
+
 const router = useRouter();
-const accounts = ref([]);
-const loading = ref(false);
-const error = ref('');
+// 移除本地accounts ref，使用store中的数据
+const accountStore = useAccountStore();
 const searchQuery = ref('');
 const successMessage = ref('');
 
@@ -180,26 +187,16 @@ const accountTypes = [
   { value: 'expense', label: '支出' }
 ];
 
-// 获取账户列表
+// 获取账户列表 - 改为调用store action
 const fetchAccounts = async () => {
-  try {
-    loading.value = true;
-    error.value = '';
-    const response = await axios.get('/accounts');
-    accounts.value = response.data;
-  } catch (err) {
-    error.value = '获取账户数据失败: ' + (err.response?.data?.error || err.message);
-    console.error('Error fetching accounts:', err);
-  } finally {
-    loading.value = false;
-  }
+  await accountStore.fetchAccounts();
 };
 
-// 过滤账户
+// 过滤账户 - 基于store中的accounts数据
 const filteredAccounts = computed(() => {
-  if (!searchQuery.value) return accounts.value;
+  if (!searchQuery.value) return accountStore.accounts;
   const query = searchQuery.value.toLowerCase();
-  return accounts.value.filter(account =>
+  return accountStore.accounts.filter(account =>
     account.name.toLowerCase().includes(query) ||
     account.type.toLowerCase().includes(query)
   );
@@ -273,49 +270,40 @@ const confirmDeleteAccount = (id) => {
 // 删除账户
 const deleteAccount = async () => {
   try {
-    loading.value = true;
-    await axios.delete(`/accounts/${accountToDelete.value}`);
-    fetchAccounts(); // 重新获取账户列表
+    // 使用store的deleteAccount action替换直接axios调用
+    await accountStore.deleteAccount(accountToDelete.value);
     deleteDialogVisible.value = false;
     successMessage.value = '账户删除成功';
     setTimeout(() => successMessage.value = '', 3000);
   } catch (err) {
     error.value = '删除账户失败: ' + (err.response?.data?.error || err.message);
-  } finally {
-    loading.value = false;
   }
 };
 
 // 提交创建账户表单
 const submitCreateForm = async () => {
   try {
-    loading.value = true;
-    await axios.post('/accounts', accountForm.value);
+    // 使用store的createAccount action
+    await accountStore.createAccount(accountForm.value);
     showCreateModal.value = false;
-    fetchAccounts();
     accountForm.value = { name: '', type: '' };
     successMessage.value = '账户创建成功';
     setTimeout(() => successMessage.value = '', 3000);
   } catch (err) {
     error.value = '创建账户失败: ' + (err.response?.data?.error || err.message);
-  } finally {
-    loading.value = false;
   }
 };
 
 // 提交编辑账户表单
 const submitEditForm = async () => {
   try {
-    loading.value = true;
-    await axios.put(`/accounts/${currentAccount.value.id}`, accountForm.value);
+    // 使用store的updateAccount action
+    await accountStore.updateAccount(currentAccount.value.id, accountForm.value);
     showEditModal.value = false;
-    fetchAccounts();
     successMessage.value = '账户更新成功';
     setTimeout(() => successMessage.value = '', 3000);
   } catch (err) {
     error.value = '更新账户失败: ' + (err.response?.data?.error || err.message);
-  } finally {
-    loading.value = false;
   }
 };
 </script>
