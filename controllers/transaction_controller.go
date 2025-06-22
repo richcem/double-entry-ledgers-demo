@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -100,9 +101,10 @@ func CreateTransfer(c echo.Context) error {
 				return err
 			}
 
-			if entry.Type == "debit" {
+			switch entry.Type {
+			case "debit":
 				account.Balance += entry.Amount
-			} else if entry.Type == "credit" {
+			case "credit":
 				account.Balance -= entry.Amount
 				// Check if account has sufficient balance
 				if account.Balance < 0 {
@@ -166,9 +168,10 @@ func CreateTransaction(c echo.Context) error {
 				return err
 			}
 
-			if entry.Type == "debit" {
+			switch entry.Type {
+			case "debit":
 				account.Balance += entry.Amount
-			} else if entry.Type == "credit" {
+			case "credit":
 				account.Balance -= entry.Amount
 			}
 
@@ -180,6 +183,86 @@ func CreateTransaction(c echo.Context) error {
 		return nil
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create transaction: " + err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, transaction)
+}
+
+// CreateDeposit handles a deposit to an account
+// @Title CreateDeposit
+// @Description 向账户存入资金
+// @Tags transactions
+// @Accept  json
+// @Produce  json
+// @Param   deposit body models.DepositRequest true "入账信息"
+// @Success 201 {object} models.Transaction
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/transactions/deposit [post]
+func CreateDeposit(c echo.Context) error {
+	// 定义入账请求结构
+	var deposit struct {
+		AccountID   uint    `json:"account_id" validate:"required"`
+		Amount      float64 `json:"amount" validate:"required,gt=0"`
+		Description string  `json:"description"`
+	}
+
+	// 绑定并验证请求数据
+	if err := c.Bind(&deposit); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效的请求数据: " + err.Error()})
+	}
+
+	// 验证金额必须为正数
+	if deposit.Amount <= 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "入账金额必须大于零"})
+	}
+
+	fmt.Printf("%#v", deposit)
+
+	// 验证账户是否存在
+	var account models.Account
+	if err := database.DB.First(&account, deposit.AccountID).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "目标账户不存在"})
+	}
+
+	// 创建入账交易（仅包含借方条目）
+	transaction := models.Transaction{
+		Description: deposit.Description,
+		Amount:      deposit.Amount,
+		Date:        time.Now(),
+		Status:      "completed",
+		Entries: []models.Entry{
+			{
+				AccountID: deposit.AccountID,
+				Amount:    deposit.Amount,
+				Type:      "debit", // 借方增加账户余额
+			},
+		},
+	}
+
+	// 使用事务确保数据一致性
+	if err := database.DB.Transaction(func(tx *gorm.DB) error {
+		// 创建交易记录
+		if err := tx.Create(&transaction).Error; err != nil {
+			return err
+		}
+
+		// 更新账户余额
+		entry := transaction.Entries[0]
+		if err := tx.First(&account, entry.AccountID).Error; err != nil {
+			return err
+		}
+
+		// 入账操作增加账户余额
+		account.Balance += entry.Amount
+
+		if err := tx.Save(&account).Error; err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "入账失败: " + err.Error()})
 	}
 
 	return c.JSON(http.StatusCreated, transaction)

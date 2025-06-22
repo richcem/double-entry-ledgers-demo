@@ -3,8 +3,8 @@ package database
 import (
 	"log"
 
-	"github.com/richcem/double-entry-ledgers-demo/models"
 	"github.com/glebarez/sqlite" // 替换SQLite驱动
+	"github.com/richcem/double-entry-ledgers-demo/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -26,8 +26,7 @@ func InitDB() {
 	err = DB.AutoMigrate(
 		&models.Account{},
 		&models.Transaction{},
-		// 注释掉未定义的TransactionItem模型迁移，避免编译错误
-		// &models.TransactionItem{},
+		&models.Entry{},
 		&models.User{}, // 添加用户模型迁移
 	)
 	if err != nil {

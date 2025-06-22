@@ -49,6 +49,7 @@ func InitRoutes(e *echo.Echo) {
 			transactions.GET("", controllers.GetAllTransactions)
 			transactions.GET("/:id", controllers.GetTransactionByID)
 			transactions.POST("", controllers.CreateTransaction)
+			transactions.POST("/deposit", controllers.CreateDeposit) // 存款
 			// transactions.PUT("/:id", controllers.UpdateTransaction) // TODO: 实现controllers.UpdateTransaction函数以解决未定义错误
 
 			// transactions.DELETE("/:id", controllers.DeleteTransaction) // TODO: 实现controllers.DeleteTransaction函数以解决未定义错误

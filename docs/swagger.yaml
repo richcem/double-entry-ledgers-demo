@@ -35,6 +35,18 @@ definitions:
       updated_at:
         type: string
     type: object
+  models.DepositRequest:
+    properties:
+      account_id:
+        type: integer
+      amount:
+        type: number
+      description:
+        type: string
+    required:
+    - account_id
+    - amount
+    type: object
   models.Entry:
     properties:
       account:
@@ -226,6 +238,39 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.Transaction'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - transactions
+  /api/transactions/deposit:
+    post:
+      consumes:
+      - application/json
+      description: 向账户存入资金
+      parameters:
+      - description: 入账信息
+        in: body
+        name: deposit
+        required: true
+        schema:
+          $ref: '#/definitions/models.DepositRequest'
       produces:
       - application/json
       responses:

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -38,7 +37,6 @@ type LoginResponse struct {
 // @Router /api/auth/login [post]
 func Login(c echo.Context) error {
 
-	fmt.Println("123123213")
 	// 绑定请求数据
 	req := new(LoginRequest)
 	if err := c.Bind(req); err != nil {
